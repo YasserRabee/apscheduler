@@ -8,7 +8,6 @@ from kazoo.exceptions import NoNodeError, NodeExistsError
 
 from apscheduler.jobstores.base import BaseJobStore, JobLookupError, ConflictingIdError
 from apscheduler.util import maybe_ref, datetime_to_utc_timestamp, utc_timestamp_to_datetime
-from apscheduler.job import Job
 
 try:
     import cPickle as pickle
@@ -138,7 +137,7 @@ class ZooKeeperJobStore(BaseJobStore):
 
     def _reconstitute_job(self, job_state):
         job_state = job_state
-        job = Job.__new__(Job)
+        job = self._scheduler.job_cls.__new__(self._scheduler.job_cls)
         job.__setstate__(job_state)
         job._scheduler = self._scheduler
         job._jobstore_alias = self._alias

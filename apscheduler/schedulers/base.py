@@ -366,7 +366,7 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
     def add_job(self, func, trigger=None, args=None, kwargs=None, id=None, name=None,
                 misfire_grace_time=undefined, coalesce=undefined, max_instances=undefined,
                 next_run_time=undefined, jobstore='default', executor='default',
-                replace_existing=False, **trigger_args):
+                replace_existing=False, job_args=None, **trigger_args):
         """
         add_job(func, trigger=None, args=None, kwargs=None, id=None, \
             name=None, misfire_grace_time=undefined, coalesce=undefined, \
@@ -409,6 +409,7 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
         :param str|unicode executor: alias of the executor to run the job with
         :param bool replace_existing: ``True`` to replace an existing job with the same ``id``
             (but retain the number of runs from the existing one)
+        :param dict job_args: dict of additional keyword arguments to pass to job
         :rtype: Job
 
         """
@@ -427,7 +428,10 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
         }
         job_kwargs = dict((key, value) for key, value in six.iteritems(job_kwargs) if
                           value is not undefined)
-        job = Job(self, **job_kwargs)
+        if job_args:
+            job_kwargs.update(job_args)
+
+        job = self.job_cls(self, **job_kwargs)
 
         # Don't really add jobs to job stores before the scheduler is up and running
         with self._jobstores_lock:
@@ -701,6 +705,9 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
             'coalesce': asbool(job_defaults.get('coalesce', True)),
             'max_instances': asint(job_defaults.get('max_instances', 1))
         }
+
+        # Set job class
+        self.job_cls = config.get('job_cls', Job)
 
         # Configure executors
         self._executors.clear()
