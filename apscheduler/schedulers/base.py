@@ -707,7 +707,9 @@ class BaseScheduler(six.with_metaclass(ABCMeta)):
         }
 
         # Set job class
-        self.job_cls = config.get('job_cls', Job)
+        job_class = config.get('job_cls', Job)
+        job_cls = maybe_ref(job_class)
+        self.job_cls = job_cls
 
         # Configure executors
         self._executors.clear()
